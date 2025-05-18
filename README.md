@@ -25,21 +25,21 @@ GadgetStore adalah aplikasi web untuk mengelola transaksi penjualan gadget. Apli
 
 #### 1. Admin (Pengelola aplikasi)
 
-- Manajemen produk (tambah, ubah, hapus)
-- Manajemen pengguna
-- Lihat riwayat transaksi
+- Manajemen data produk (tambah, edit, hapus)
+- Manajemen pengguna (kasir & customer)
+- Melihat dan memantau riwayat transaksi
 
-#### 2. kasir
+#### 2. transaksi
 
-- Proses transaksi pembelian
-- Cetak struk
-- Lihat daftar produk
+- Melayani transaksi pelanggan
+- Cetak struk transaksi
+- Melihat stok & informasi produk
 
-#### 3. kostumer
+#### 3. detail transaksi
 
-- Registrasi & login
+- Registrasi dan login
 - Melihat daftar produk
-- Melakukan pemesanan/pembelian
+- Melakukan pembelian
 
 
 <br>
@@ -47,51 +47,62 @@ GadgetStore adalah aplikasi web untuk mengelola transaksi penjualan gadget. Apli
 ### Tabel-tabel database beserta field dan tipe datanya
 <br>
 
-#### Tabel 1 (Pengguna)
+#### Tabel 1 (users)
 
-| Field            | Tipe Data | Keterangan             |
-|------------------|-----------|------------------------|
-| id               | bigint    | Primary key            |
-| name             | string    | Nama pengguna          |
-| email            | string    | Email unik             |
-| password         | string    | Kata sandi             |
-| role_id          | bigint    | Relasi ke tabel roles  |
-| email_verified_at| timestamp | Verifikasi email       |
-| remember_token   | string    | Token login            |
+| Field              | Tipe Data     | Keterangan                    |
+|-------------------|---------------|--------------------------------|
+| id                | bigint        | Primary key                   |
+| name              | string        | Nama pengguna                 |
+| email             | string        | Unik, untuk login             |
+| password          | string        | Kata sandi terenkripsi        |
+| role_id           | unsignedBigInt| Mengacu ke tabel roles        |
+| email_verified_at | timestamp     | Waktu verifikasi email        |
+| remember_token    | string        | Token sesi login              |
+| timestamps        | timestamps    | created_at & updated_at       |
 <br>
 
-#### Tabel 2 (Kategori)
+#### Tabel 2 (products)
 
-| Field | Tipe Data | Keterangan         |
-|-------|-----------|--------------------|
-| id    | bigint    | Primary key        |
-| name  | string    | admin, kasir, customer |
+| Field       | Tipe Data | Keterangan                  |
+|-------------|-----------|-----------------------------|
+| id          | bigint    | Primary key                 |
+| name        | string    | Nama produk gadget          |
+| description | text      | Deskripsi produk            |
+| price       | decimal   | Harga satuan produk         |
+| stock       | integer   | Jumlah stok tersedia        |
+| brand       | string    | Merek produk                |
+| model       | string    | Model produk                |
+| image       | string    | Nama file gambar (nullable) |
+| timestamps  | timestamps| created_at & updated_at     |
 <br>
 
-#### Tabel 3 (Resep)
+#### Tabel 3 (transactions)
 
-| Field       | Tipe Data | Keterangan         |
-|-------------|-----------|--------------------|
-| id          | bigint    | Primary key        |
-| name        | string    | Nama produk        |
-| description | text      | Deskripsi produk   |
-| price       | decimal   | Harga gadget       |
-| stock       | integer   | Jumlah stok tersedia |
+| Field           | Tipe Data | Keterangan                         |
+|-----------------|-----------|------------------------------------|
+| id              | bigint    | Primary key                        |
+| user_id         | foreignId | Mengacu ke tabel `users` (kasir)   |
+| transaction_date| datetime  | Waktu transaksi                    |
+| total_amount    | decimal   | Total pembayaran                   |
+| status          | string    | Status transaksi (e.g., pending)   |
+| timestamps      | timestamps| created_at & updated_at            |
 <br>
 
-#### Tabel 4 (Bahan-bahan)
+#### Tabel 4 (transaction_details)
 
-| Field       | Tipe Data | Keterangan                     |
-|-------------|-----------|--------------------------------|
-| id          | bigint    | Primary key                    |
-| user_id     | bigint    | Relasi ke customer             |
-| total_price | decimal   | Total harga seluruh pembelian |
-| order_date  | timestamp | Tanggal pemesanan              |
-| status      | enum      | Status pesanan (e.g., paid)    |
+| Field         | Tipe Data | Keterangan                              |
+|---------------|-----------|-----------------------------------------|
+| id            | bigint    | Primary key                             |
+| transaction_id| foreignId | Relasi ke tabel `transactions`          |
+| product_id    | foreignId | Relasi ke tabel `products`              |
+| quantity      | integer   | Jumlah produk yang dibeli               |
+| price         | decimal   | Harga per item saat transaksi           |
+| timestamps    | timestamps| created_at & updated_at                 |
 <br>
 
 ### Jenis-jenis Relasi
 
-- Users → Roles (Many-to-One)
-- Users → Orders (One-to-Many)
-- Orders → Products (Many-to-Many jika ada tabel `order_details`)
+- **Users** → **Transactions**: One-to-Many (kasir bisa punya banyak transaksi)
+- **Transactions** → **TransactionDetails**: One-to-Many
+- **Products** → **TransactionDetails**: One-to-Many
+- **Users** → **Roles** *(jika ditambahkan nanti)*: Many-to-One
